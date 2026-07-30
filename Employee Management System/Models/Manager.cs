@@ -8,6 +8,6 @@ namespace Employee_Management_System.Models
 {
     internal class Manager : Employee
     {
-        public List<Employee> TeamMembers { get; set; }
+        public List<Employee> TeamMembers = new List<Employee>();
     }
 }

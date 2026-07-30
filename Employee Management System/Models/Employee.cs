@@ -12,7 +12,7 @@ namespace Employee_Management_System.Models
         public string Name { get; set; }
         public DateTime HireDate { get; set; }
         public double Salary { get; set; }
-
+        public int DepartmentId { get; set; }
 
     }
 }
