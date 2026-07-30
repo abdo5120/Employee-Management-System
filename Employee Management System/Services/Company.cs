@@ -15,7 +15,35 @@ namespace Employee_Management_System.Services
         private Stack<string> actionHistory = new Stack<string>();
         private HashSet<string> skills = new HashSet<string>();
 
-        
+        public void AddOnboardingEmployee(Employee employee)
+        {
+            if (IsEmployeeExists(employee.Id) || IsEmployeeExistsInOnboardingQueue(employee.Id))
+                return;
+            onboardingQueue.Enqueue(employee);
+            actionHistory.Push($"Added onboarding employee: {employee.Name}");
+            Console.WriteLine("Employee added to onboarding queue successfully.");
+        }
+
+        public void ProcessOnboarding(double salary,int departmentId)
+        {
+            if (onboardingQueue.Count == 0)
+            {
+                Console.WriteLine("No employees in the onboarding queue.");
+                return;
+            }
+
+            Employee employee = onboardingQueue.Dequeue();
+            employee.Salary = salary;
+            employee.DepartmentId = departmentId;
+            AddEmployee(employee);
+            foreach (var skill in employee.skills)
+            {
+                skills.Add(skill);
+                actionHistory.Push($"Added skill: {skill} for employee: {employee.Name}");
+            }
+            actionHistory.Push($"Processed onboarding for employee: {employee.Name}");
+            Console.WriteLine($"Employee {employee.Name} has been onboarded successfully.");
+        }
 
         public void AddDepartment(Department department)
         {
@@ -29,28 +57,107 @@ namespace Employee_Management_System.Services
             Console.WriteLine($"Department {department.Name} added successfully.");
         }
 
-        public void AddOnboardingEmployee(Employee employee)
+        public void addSkillForEmployee(int employeeId, string skill)
         {
-            if (IsEmployeeExists(employee.Id) || IsEmployeeExistsInOnboardingQueue(employee.Id))
+            Employee employee = GetEmployeeById(employeeId);
+            if (employee != null)
+            {
+                employee.skills.Add(skill);
+                skills.Add(skill);
+                actionHistory.Push($"Added skill: {skill} for employee: {employee.Name}");
+                Console.WriteLine($"Skill {skill} added for employee {employee.Name}.");
+            }
+        }
+
+        public Employee GetEmployeeById(int employeeId)
+        {
+            foreach (var employee in employees)
+            {
+                if (employee.Id == employeeId)
+                {
+                    return employee;
+                }
+            }
+            Console.WriteLine($"Employee with ID {employeeId} not found.");
+            return null;
+        }
+
+        public void GetEmployeeByDepartmentId(int departmentId)
+        {
+            Department department = GetDepartmentById(departmentId);
+            if (department == null)
                 return;
-            onboardingQueue.Enqueue(employee);
-            actionHistory.Push($"Added onboarding employee: {employee.Name}");
-            Console.WriteLine("Employee added to onboarding queue successfully.");
+
+            foreach (var employee in employees)
+            {
+                if (employee.DepartmentId == departmentId)
+                {
+                    Console.WriteLine($"Employee ID: {employee.Id}, Name: {employee.Name}, Hire Date: {employee.HireDate.ToShortDateString()}, Salary: {employee.Salary}");
+                }
+            }
+        }
+
+        public double CalculateAverageSalary()
+        {
+            double sum = 0;
+            foreach (var employee in employees)
+                sum+=employee.Salary;
+            return sum/employees.Count;
+        }
+
+        public void GetEmployeeCountForEachDepartment()
+        {
+            foreach(var d in departments)
+            {
+                int count = 0;
+                foreach (var e in employees)
+                    if (e.DepartmentId == d.Key)
+                        count++;
+                Console.WriteLine($"Employee Count for Department {d.Value.Name} is {count}");
+            }
+        }
+
+        public Department GetDepartmentById(int departmentId)
+        {
+            if (departments.TryGetValue(departmentId, out Department department))
+            {
+                Console.WriteLine("Department ID: {0}, Name: {1}", department.Id, department.Name);
+                return department;
+            }
+            Console.WriteLine($"Department with ID {departmentId} not found.");
+            return null;
         }
 
 
-        public void ProcessOnboarding()
+        public void GetEmployeesByName(string name)
         {
-            if (onboardingQueue.Count == 0)
+            foreach (var employee in this.employees)
             {
-                Console.WriteLine("No employees in the onboarding queue.");
-                return;
+                if (employee.Name.Equals(name, StringComparison.OrdinalIgnoreCase))
+                {
+                    Console.WriteLine($"Employee ID: {employee.Id}, Name: {employee.Name}, Hire Date: {employee.HireDate.ToShortDateString()}, Salary: {employee.Salary}, Department ID: {employee.DepartmentId}");
+                }
             }
+            if (employees.Count == 0)
+                Console.WriteLine("No employees found with the name: " + name);
+        }
 
-            Employee employee = onboardingQueue.Dequeue();
-            AddEmployee(employee);
-            actionHistory.Push($"Processed onboarding for employee: {employee.Name}");
-            Console.WriteLine($"Employee {employee.Name} has been onboarded successfully.");
+        public void ShowActionHistory()
+        {
+            Console.WriteLine("Action History:");
+            foreach (var action in actionHistory)
+            {
+                Console.WriteLine(action);
+            }
+        }
+
+        public void ShowUniqeSkills()
+        {
+            Console.WriteLine("Unique Skills:");
+            foreach (var skill in skills)
+            {
+                Console.WriteLine(skill);
+            }
         }
 
         // Helper Methods
@@ -88,5 +195,7 @@ namespace Employee_Management_System.Services
             }
             return false;
         }
+
+
     }
 }
